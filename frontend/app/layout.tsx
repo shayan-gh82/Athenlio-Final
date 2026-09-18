@@ -70,7 +70,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: localeRootScript }} />
-        <meta name="codex-preview" content="development" />
       </head>
       <body className="min-h-screen antialiased">
         <AppProviders>{children}</AppProviders>
