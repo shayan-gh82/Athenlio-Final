@@ -1,0 +1,6 @@
+#POST /students/{student_id}/add-course/
+#{
+ # "course_id": "cr1002"
+#}
+
+#show course data to student

@@ -1,0 +1,54 @@
+    /learningEnglish-Back           # Main Django project folder
+        /learnenglish
+            __init__.py
+            settings.py           # Settings for the Django project
+            urls.py               # Main URLs for routing
+            wsgi.py               # WSGI application
+            asgi.py               # ASGI application (for async support)
+        /accounts             # App for user accounts and authentication
+            __init__.py
+            models.py         # Models for the account (user, profile, etc.)
+            views.py          # Views for account actions (login, register, etc.)
+            urls.py           # URLs for account actions
+            serializers.py    # Serializers for user data (e.g., registration, profile)
+            auth.py           # Custom authentication classes (JWT handling, etc.)
+            migrations/       # Database migrations for accounts
+        /courses              # App for managing courses
+            __init__.py
+            models.py         # Models for course data (course, lessons, etc.)
+            views.py          # Views for course actions (enroll, list courses, etc.)
+            urls.py           # URLs for course actions
+            serializers.py    # Serializers for course data (e.g., course info)
+            migrations/       # Database migrations for courses
+        /students             # App for managing students
+            __init__.py
+            models.py         # Models for student data
+            views.py          # Views for student actions
+            urls.py           # URLs for student actions
+            serializers.py    # Serializers for student data
+            migrations/       # Database migrations for students
+        /tutors               # App for managing tutors
+            __init__.py
+            models.py         # Models for tutor data
+            views.py          # Views for tutor actions
+            urls.py           # URLs for tutor actions
+            serializers.py    # Serializers for tutor data
+            migrations/       # Database migrations for tutors
+        /blog                      # NEW
+        __init__.py
+        admin.py
+        apps.py
+        models.py
+        serializers.py
+        urls.py
+        views.py
+        tests/
+        migrations/
+
+        /media
+        /docs
+
+    /db.sqlite3              # SQLite database file (if used for dev)
+    manage.py                # Django manage script (runserver, migrate, etc.)
+    requirements.txt         # List of dependencies for the backend
+    /env
