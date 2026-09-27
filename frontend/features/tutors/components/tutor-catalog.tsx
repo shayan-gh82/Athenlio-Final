@@ -18,7 +18,7 @@ import { normalizeTutorProfile } from "@/features/tutors/normalize";
 import type { Tutor } from "@/features/tutors/types";
 import { apiClient } from "@/lib/api/client";
 import { unwrapCollection, type PaginatedResponse } from "@/lib/api/collections";
-import { isApiConfigured } from "@/lib/api/config";
+import { isCatalogAvailable } from "@/lib/api/config";
 import { endpoints } from "@/lib/api/endpoints";
 import { queryKeys } from "@/lib/query/keys";
 
@@ -31,12 +31,12 @@ export function TutorCatalog() {
   const locale = useLocale();
   const [search, setSearch] = useState("");
   const query = useQuery({
-    queryKey: queryKeys.tutors(),
+    queryKey: [...queryKeys.tutors(), locale],
     queryFn: async () => {
-      const response = await apiClient.get<Tutor[] | PaginatedResponse<Tutor>>(endpoints.tutors.list);
+      const response = await apiClient.get<Tutor[] | PaginatedResponse<Tutor>>(endpoints.tutors.list, { headers: { "X-Demo-Locale": locale } });
       return unwrapCollection(response.data).map(normalizeTutorProfile).filter((tutor) => tutor.is_approved === true);
     },
-    enabled: isApiConfigured,
+    enabled: isCatalogAvailable,
     staleTime: 3 * 60_000,
   });
 
@@ -63,7 +63,7 @@ export function TutorCatalog() {
         </div>
 
         <div className="mt-10">
-          {!isApiConfigured ? <CatalogState kind="unconfigured" /> : null}
+          {!isCatalogAvailable ? <CatalogState kind="unconfigured" /> : null}
           {query.isLoading ? <CatalogLoading /> : null}
           {query.isError ? <CatalogState kind="error" onRetry={() => query.refetch()} /> : null}
           {query.isSuccess && tutors.length === 0 ? <CatalogState kind="empty" /> : null}

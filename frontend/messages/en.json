@@ -219,7 +219,7 @@
     "loginSuccess": "You are now signed in.",
     "registerSuccess": "Your account was created successfully.",
     "previewModeTitle": "This form is in preview mode",
-    "previewModeDescription": "Live submission will be enabled after the backend is deployed and the API URL is configured."
+    "previewModeDescription": "This is a portfolio preview. Real sign-in and account creation are unavailable in the public demo."
   },
   "dashboardShell": {
     "studentArea": "Student area",

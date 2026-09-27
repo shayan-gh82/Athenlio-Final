@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CatalogState } from "@/features/catalog/components/catalog-state";
 import { getTutorPublicProfile } from "@/features/tutors/api";
 import type { TutorProfile } from "@/features/tutors/types";
-import { isApiConfigured } from "@/lib/api/config";
+import { isCatalogAvailable } from "@/lib/api/config";
 import { queryKeys } from "@/lib/query/keys";
 
 function tutorName(profile: TutorProfile) {
@@ -27,9 +27,9 @@ export function TutorDetail({ tutorId }: { tutorId: string }) {
   const t = useTranslations("tutorDetail");
   const BackIcon = locale === "fa" ? ArrowRight : ArrowLeft;
   const query = useQuery({
-    queryKey: queryKeys.tutor(tutorId),
-    queryFn: () => getTutorPublicProfile(tutorId),
-    enabled: isApiConfigured,
+    queryKey: [...queryKeys.tutor(tutorId), locale],
+    queryFn: () => getTutorPublicProfile(tutorId, locale),
+    enabled: isCatalogAvailable,
     retry: false,
     staleTime: 3 * 60_000,
   });
@@ -43,7 +43,7 @@ export function TutorDetail({ tutorId }: { tutorId: string }) {
       <SiteHeader />
       <main className="mx-auto max-w-[1180px] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         <Button asChild variant="ghost" className="mb-6 -ms-3 rounded-xl"><Link href={`/${locale}/tutors`}><BackIcon aria-hidden="true" />{t("back")}</Link></Button>
-        {!isApiConfigured ? <><h1 className="sr-only">{t("pageTitle")}</h1><CatalogState kind="unconfigured" /></> : null}
+        {!isCatalogAvailable ? <><h1 className="sr-only">{t("pageTitle")}</h1><CatalogState kind="unconfigured" /></> : null}
         {query.isLoading ? <TutorDetailLoading /> : null}
         {query.isError ? <CatalogState kind="error" onRetry={() => query.refetch()} /> : null}
         {profile ? (

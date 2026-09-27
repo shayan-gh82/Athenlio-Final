@@ -219,7 +219,7 @@
     "loginSuccess": "با موفقیت وارد شدی.",
     "registerSuccess": "حساب تو با موفقیت ساخته شد.",
     "previewModeTitle": "فرم در حالت پیش‌نمایش است",
-    "previewModeDescription": "پس از استقرار بک‌اند و ثبت آدرس API، ارسال واقعی فرم فعال می‌شود."
+    "previewModeDescription": "این نسخه برای نمایش رابط کاربری است. ورود و ساخت حساب واقعی در دموی عمومی فعال نیست."
   },
   "dashboardShell": {
     "studentArea": "فضای زبان‌آموز",

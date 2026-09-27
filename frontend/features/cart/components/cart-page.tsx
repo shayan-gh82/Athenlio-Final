@@ -16,7 +16,7 @@ import type { Course } from "@/features/courses/types";
 import { getStudentDashboard } from "@/features/students/api";
 import { apiClient } from "@/lib/api/client";
 import { unwrapCollection, type PaginatedResponse } from "@/lib/api/collections";
-import { isApiConfigured } from "@/lib/api/config";
+import { isApiConfigured, isCatalogAvailable, isDemoMode } from "@/lib/api/config";
 import { endpoints } from "@/lib/api/endpoints";
 import { queryKeys } from "@/lib/query/keys";
 import { useAppSelector } from "@/store/hooks";
@@ -34,9 +34,9 @@ export function CartPage() {
   const cart = useCourseCart();
   const authStatus = useAppSelector((state) => state.auth.status);
   const coursesQuery = useQuery({
-    queryKey: queryKeys.courseList,
-    queryFn: async () => unwrapCollection((await apiClient.get<Course[] | PaginatedResponse<Course>>(endpoints.courses.list)).data),
-    enabled: isApiConfigured && cart.isReady && cart.count > 0,
+    queryKey: [...queryKeys.courseList, locale],
+    queryFn: async () => unwrapCollection((await apiClient.get<Course[] | PaginatedResponse<Course>>(endpoints.courses.list, { headers: { "X-Demo-Locale": locale } })).data),
+    enabled: isCatalogAvailable && cart.isReady && cart.count > 0,
   });
   const dashboardQuery = useQuery({
     queryKey: queryKeys.studentDashboard,
@@ -71,11 +71,11 @@ export function CartPage() {
           <div className="space-y-4">{courses.map((course) => {
             const itemPrice = price(course);
             const enrollment = dashboardQuery.data?.enrollments.find((item) => item.course.id === course.id);
-            return <Card key={course.id} className="border-primary/10 bg-card/90"><CardContent className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center"><span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary"><BookOpen aria-hidden="true" /></span><div className="min-w-0 flex-1"><h2 className="truncate text-lg font-bold">{course.title}</h2><p className="mt-1 text-sm text-muted-foreground">{course.language} · {course.level}</p><p className="mt-2 font-bold text-primary">{itemPrice ? `${itemPrice.amount.toLocaleString(locale)} ${itemPrice.currency}` : (fa ? "قیمت نامشخص" : "Price unavailable")}</p>{enrollment ? <Badge className="mt-2" variant={enrollment.status === "approved" ? "default" : "secondary"}>{enrollment.status === "approved" ? (fa ? "خرید تأییدشده" : "Approved purchase") : (fa ? "درخواست قبلاً ثبت شده" : "Request already submitted")}</Badge> : null}</div><div className="flex shrink-0 gap-2 sm:flex-col"><Button asChild className="flex-1 rounded-xl"><Link href={enrollment ? `/${locale}/dashboard/student/purchases` : `/${locale}/courses/${course.id}?enroll=1`}>{enrollment ? (fa ? "مشاهده وضعیت" : "View status") : (fa ? "ادامه خرید" : "Continue")}</Link></Button><Button type="button" variant="ghost" size="icon" className="rounded-xl text-destructive" aria-label={fa ? "حذف از سبد" : "Remove from cart"} onClick={() => cart.remove(course.id)}><Trash2 aria-hidden="true" /></Button></div></CardContent></Card>;
+            return <Card key={course.id} className="border-primary/10 bg-card/90"><CardContent className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center"><span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary"><BookOpen aria-hidden="true" /></span><div className="min-w-0 flex-1"><h2 className="truncate text-lg font-bold">{course.title}</h2><p className="mt-1 text-sm text-muted-foreground">{course.language} · {course.level}</p><p className="mt-2 font-bold text-primary">{itemPrice ? `${itemPrice.amount.toLocaleString(locale)} ${itemPrice.currency}` : (fa ? "قیمت نامشخص" : "Price unavailable")}</p>{enrollment ? <Badge className="mt-2" variant={enrollment.status === "approved" ? "default" : "secondary"}>{enrollment.status === "approved" ? (fa ? "خرید تأییدشده" : "Approved purchase") : (fa ? "درخواست قبلاً ثبت شده" : "Request already submitted")}</Badge> : null}</div><div className="flex shrink-0 gap-2 sm:flex-col"><Button asChild className="flex-1 rounded-xl"><Link href={enrollment ? `/${locale}/dashboard/student/purchases` : `/${locale}/courses/${course.id}?enroll=1`}>{enrollment ? (fa ? "مشاهده وضعیت" : "View status") : (fa ? isDemoMode ? "مشاهده دوره" : "ادامه خرید" : isDemoMode ? "View course" : "Continue")}</Link></Button><Button type="button" variant="ghost" size="icon" className="rounded-xl text-destructive" aria-label={fa ? "حذف از سبد" : "Remove from cart"} onClick={() => cart.remove(course.id)}><Trash2 aria-hidden="true" /></Button></div></CardContent></Card>;
           })}</div>
           <Card className="h-fit border-secondary-bright/20 bg-card/92 lg:sticky lg:top-24"><CardHeader><CardTitle>{fa ? "خلاصه سبد" : "Cart summary"}</CardTitle></CardHeader><CardContent className="space-y-4"><div className="flex justify-between"><span className="text-muted-foreground">{fa ? "تعداد دوره" : "Courses"}</span><strong>{courses.length}</strong></div>{Object.entries(totals).map(([currency, amount]) => <div key={currency} className="flex justify-between border-t pt-4"><span>{fa ? "جمع" : "Total"} ({currency})</span><strong>{amount.toLocaleString(locale)}</strong></div>)}<p className="border-t pt-4 text-xs leading-6 text-muted-foreground">{fa ? "به‌دلیل نیاز به رسید مجزا، پرداخت هر دوره جداگانه ثبت می‌شود." : "Each course is submitted separately because every enrollment needs its own receipt."}</p><Button type="button" variant="ghost" className="w-full rounded-xl text-destructive" onClick={cart.clear}><Trash2 aria-hidden="true" />{fa ? "خالی‌کردن سبد" : "Clear cart"}</Button></CardContent></Card>
         </div> : null}
-        {missingIds.length > 0 && !coursesQuery.isLoading ? <p className="mt-5 text-sm text-muted-foreground">{fa ? "برخی دوره‌های قدیمی یا غیرفعال از سبد حذف شدند." : "Some old or unavailable courses were removed from the cart."}</p> : null}
+        {missingIds.length > 0 && coursesQuery.isSuccess ? <p className="mt-5 text-sm text-muted-foreground">{fa ? "برخی دوره‌های سبد دیگر در دسترس نیستند." : "Some courses in your cart are no longer available."}</p> : null}
       </main>
       <SiteFooter />
     </div>

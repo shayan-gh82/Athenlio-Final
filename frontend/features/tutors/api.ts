@@ -15,10 +15,10 @@ export async function getTutorDashboard() {
   };
 }
 
-export async function getTutorPublicProfile(id: number | string) {
+export async function getTutorPublicProfile(id: number | string, locale?: string) {
   const [profileResponse, coursesResponse] = await Promise.all([
-    apiClient.get<TutorProfile>(endpoints.tutors.detail(id)),
-    apiClient.get<Course[] | PaginatedResponse<Course>>(endpoints.courses.list),
+    apiClient.get<TutorProfile>(endpoints.tutors.detail(id), { headers: { "X-Demo-Locale": locale } }),
+    apiClient.get<Course[] | PaginatedResponse<Course>>(endpoints.courses.list, { headers: { "X-Demo-Locale": locale } }),
   ]);
   const tutorId = Number(id);
   const relatedCourses = unwrapCollection(coursesResponse.data).filter((course) => course.tutor?.id === tutorId);

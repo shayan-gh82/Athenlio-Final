@@ -23,7 +23,7 @@ import { courseFiltersToSearchParams, type CourseCatalogFilters, type CourseSort
 import type { Course } from "@/features/courses/types";
 import { apiClient } from "@/lib/api/client";
 import { unwrapCollection, type PaginatedResponse } from "@/lib/api/collections";
-import { isApiConfigured } from "@/lib/api/config";
+import { isCatalogAvailable } from "@/lib/api/config";
 import { endpoints } from "@/lib/api/endpoints";
 import { queryKeys } from "@/lib/query/keys";
 import { replaceLocationSearch } from "@/hooks/use-location-search";
@@ -49,12 +49,12 @@ export function CourseCatalog({ initialFilters }: { initialFilters: CourseCatalo
   const [draftSearch, setDraftSearch] = useState(initialFilters.q);
   const initialQuery = courseFiltersToSearchParams(initialFilters).toString();
   const query = useQuery({
-    queryKey: queryKeys.courseList,
+    queryKey: [...queryKeys.courseList, locale],
     queryFn: async () => {
-      const response = await apiClient.get<Course[] | PaginatedResponse<Course>>(endpoints.courses.list);
+      const response = await apiClient.get<Course[] | PaginatedResponse<Course>>(endpoints.courses.list, { headers: { "X-Demo-Locale": locale } });
       return unwrapCollection(response.data);
     },
-    enabled: isApiConfigured,
+    enabled: isCatalogAvailable,
     staleTime: 3 * 60_000,
   });
 
@@ -145,7 +145,7 @@ export function CourseCatalog({ initialFilters }: { initialFilters: CourseCatalo
         </div>
 
         <div className="mt-5">
-          {!isApiConfigured ? <CatalogState kind="unconfigured" /> : null}
+          {!isCatalogAvailable ? <CatalogState kind="unconfigured" /> : null}
           {query.isLoading ? <CatalogLoading /> : null}
           {query.isError ? <CatalogState kind="error" onRetry={() => query.refetch()} /> : null}
           {query.isSuccess && filteredCourses.length === 0 ? <CourseEmptyState hasFilters={Boolean(activeFilterCount)} onClear={clearFilters} /> : null}

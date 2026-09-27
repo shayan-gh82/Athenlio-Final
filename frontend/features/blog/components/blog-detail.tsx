@@ -13,7 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getBlog } from "@/features/blog/api";
 import { BlogCover } from "@/features/blog/components/blog-cover";
 import { CatalogLoading, CatalogState } from "@/features/catalog/components/catalog-state";
-import { isApiConfigured } from "@/lib/api/config";
+import { isCatalogAvailable } from "@/lib/api/config";
 import { normalizeApiError } from "@/lib/api/errors";
 import { queryKeys } from "@/lib/query/keys";
 
@@ -32,9 +32,9 @@ export function BlogDetail({ postId }: { postId: string }) {
   const t = useTranslations("blogDetail");
   const BackArrow = locale === "fa" ? ArrowRight : ArrowLeft;
   const query = useQuery({
-    queryKey: queryKeys.blog(postId),
-    queryFn: () => getBlog(postId),
-    enabled: isApiConfigured,
+    queryKey: [...queryKeys.blog(postId), locale],
+    queryFn: () => getBlog(postId, locale),
+    enabled: isCatalogAvailable,
     retry: false,
     staleTime: 3 * 60_000,
   });
@@ -49,7 +49,7 @@ export function BlogDetail({ postId }: { postId: string }) {
           <Link href={`/${locale}/blog`}><BackArrow aria-hidden="true" />{t("back")}</Link>
         </Button>
 
-        {!isApiConfigured ? <CatalogState kind="unconfigured" /> : null}
+        {!isCatalogAvailable ? <CatalogState kind="unconfigured" /> : null}
         {query.isLoading ? <CatalogLoading /> : null}
         {query.isError ? isNotFound ? (
           <div className="grid min-h-80 place-items-center rounded-3xl border border-dashed border-primary/20 bg-card/70 p-8 text-center">

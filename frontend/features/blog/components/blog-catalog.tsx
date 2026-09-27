@@ -16,7 +16,7 @@ import { CatalogLoading, CatalogState } from "@/features/catalog/components/cata
 import { getBlogs } from "@/features/blog/api";
 import { BlogCover } from "@/features/blog/components/blog-cover";
 import type { BlogPost } from "@/features/blog/types";
-import { isApiConfigured } from "@/lib/api/config";
+import { isCatalogAvailable } from "@/lib/api/config";
 import { queryKeys } from "@/lib/query/keys";
 
 function postDate(value: string, locale: string) {
@@ -31,9 +31,9 @@ export function BlogCatalog() {
   const [search, setSearch] = useState("");
   const Arrow = locale === "fa" ? ArrowLeft : ArrowRight;
   const query = useQuery({
-    queryKey: queryKeys.blogs,
-    queryFn: getBlogs,
-    enabled: isApiConfigured,
+    queryKey: [...queryKeys.blogs, locale],
+    queryFn: () => getBlogs(locale),
+    enabled: isCatalogAvailable,
     staleTime: 3 * 60_000,
   });
   const posts = useMemo(() => {
@@ -61,7 +61,7 @@ export function BlogCatalog() {
         </div>
 
         <div className="mt-10">
-          {!isApiConfigured ? <CatalogState kind="unconfigured" /> : null}
+          {!isCatalogAvailable ? <CatalogState kind="unconfigured" /> : null}
           {query.isLoading ? <CatalogLoading /> : null}
           {query.isError ? <CatalogState kind="error" onRetry={() => query.refetch()} /> : null}
           {query.isSuccess && posts.length === 0 ? <CatalogState kind="empty" /> : null}

@@ -1,8 +1,8 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 import { authRetryExcludedEndpoints, endpoints } from "@/lib/api/endpoints";
 import { normalizeApiError } from "@/lib/api/errors";
-import { apiBaseUrl } from "@/lib/api/config";
+import { apiBaseUrl, isDemoMode } from "@/lib/api/config";
 
 type RetryableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
 
@@ -12,6 +12,17 @@ export const apiClient = axios.create({
   timeout: 20_000,
   headers: { Accept: "application/json" },
 });
+
+if (isDemoMode) {
+  apiClient.defaults.adapter = async (config) => {
+    const { resolveDemoRead } = await import("@/lib/demo/catalog");
+    const locale = String(config.headers.get("X-Demo-Locale") ?? "fa");
+    const data = config.method === "get" ? resolveDemoRead(config.url ?? "", locale) : undefined;
+    const response = { data: data ?? { detail: "This action is unavailable in the read-only demo." }, status: data === undefined ? 404 : 200, statusText: data === undefined ? "Not Found" : "OK", headers: {}, config };
+    if (data === undefined) throw new AxiosError("Unavailable in demo", "ERR_DEMO_UNAVAILABLE", config, undefined, response);
+    return response;
+  };
+}
 
 const refreshClient = axios.create({
   baseURL: apiBaseUrl,
@@ -32,6 +43,12 @@ function notifyAuthExpired() {
     window.dispatchEvent(new CustomEvent("athenlio:auth-expired"));
   }
 }
+
+// Locale is for the in-memory demo adapter only; never add a custom CORS header to Django.
+apiClient.interceptors.request.use((config) => {
+  if (!isDemoMode) config.headers.delete("X-Demo-Locale");
+  return config;
+});
 
 apiClient.interceptors.response.use(
   (response) => {

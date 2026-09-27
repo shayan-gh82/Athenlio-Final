@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { DemoBanner } from "@/components/layout/demo-banner";
 import { NextIntlClientProvider } from "next-intl";
 
 import { HomeExperience } from "@/features/home/components/home-experience";
@@ -29,7 +30,7 @@ export function LocaleProvider({
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages[locale]} timeZone="UTC">
-      <div lang={locale} dir={locale === "fa" ? "rtl" : "ltr"}>{children}</div>
+      <div lang={locale} dir={locale === "fa" ? "rtl" : "ltr"}><DemoBanner />{children}</div>
     </NextIntlClientProvider>
   );
 }

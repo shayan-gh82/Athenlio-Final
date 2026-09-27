@@ -21,7 +21,7 @@ import type { Course } from "@/features/courses/types";
 import { EnrollmentForm } from "@/features/enrollments/components/enrollment-form";
 import { getStudentDashboard } from "@/features/students/api";
 import { apiClient } from "@/lib/api/client";
-import { isApiConfigured } from "@/lib/api/config";
+import { isApiConfigured, isCatalogAvailable, isDemoMode } from "@/lib/api/config";
 import { endpoints } from "@/lib/api/endpoints";
 import { queryKeys } from "@/lib/query/keys";
 import { useAppSelector } from "@/store/hooks";
@@ -36,9 +36,9 @@ export function CourseDetail({ courseId, autoEnroll = false }: { courseId: strin
   const [enrollmentOpen, setEnrollmentOpen] = useState(false);
   const [autoEnrollmentDismissed, setAutoEnrollmentDismissed] = useState(false);
   const query = useQuery({
-    queryKey: queryKeys.course(courseId),
-    queryFn: async () => (await apiClient.get<Course>(endpoints.courses.detail(courseId))).data,
-    enabled: isApiConfigured,
+    queryKey: [...queryKeys.course(courseId), locale],
+    queryFn: async () => (await apiClient.get<Course>(endpoints.courses.detail(courseId), { headers: { "X-Demo-Locale": locale } })).data,
+    enabled: isCatalogAvailable,
     retry: false,
     staleTime: 3 * 60_000,
   });
@@ -64,7 +64,7 @@ export function CourseDetail({ courseId, autoEnroll = false }: { courseId: strin
       <SiteHeader />
       <main className="mx-auto max-w-[1180px] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         <Button asChild variant="ghost" className="mb-6 -ms-3 rounded-xl"><Link href={`/${locale}/courses`}><BackIcon aria-hidden="true" />{t("back")}</Link></Button>
-        {!isApiConfigured ? <CatalogState kind="unconfigured" /> : null}
+        {!isCatalogAvailable ? <CatalogState kind="unconfigured" /> : null}
         {query.isLoading ? <div className="space-y-5"><Skeleton className="h-72 rounded-3xl" /><div className="grid gap-5 lg:grid-cols-3"><Skeleton className="h-64 rounded-3xl lg:col-span-2" /><Skeleton className="h-64 rounded-3xl" /></div></div> : null}
         {query.isError ? <CatalogState kind="error" onRetry={() => query.refetch()} /> : null}
         {course ? (
@@ -85,7 +85,7 @@ export function CourseDetail({ courseId, autoEnroll = false }: { courseId: strin
               <Card className="h-fit border-secondary-bright/20 bg-card/92 shadow-lg shadow-primary/8 lg:sticky lg:top-24">
                 <CardHeader><p className="text-sm font-bold text-secondary">{t("enrollment")}</p><CardTitle className="text-2xl">{dollarPrice > 0 ? `${dollarPrice.toLocaleString()} USD` : tomanPrice > 0 ? `${tomanPrice.toLocaleString()} TOMAN` : t("priceUnavailable")}</CardTitle></CardHeader>
                 <CardContent className="space-y-4"><div className="space-y-3 text-sm text-muted-foreground"><p className="flex gap-2"><CheckCircle2 className="size-5 shrink-0 text-secondary" />{t("proofRequired")}</p><p className="flex gap-2"><CheckCircle2 className="size-5 shrink-0 text-secondary" />{t("manualReview")}</p></div>
-                  {currentEnrollment ? <Button asChild className="h-11 w-full rounded-xl"><Link href={`/${locale}/dashboard/student/purchases`}><CheckCircle2 aria-hidden="true" />{locale === "fa" ? "مشاهده وضعیت خرید" : "View purchase status"}</Link></Button> : authStatus === "student" ? <><Button className="h-11 w-full rounded-xl" onClick={() => setEnrollmentOpen(true)}><CreditCard aria-hidden="true" />{t("requestEnrollment")}</Button><AddToCartButton courseId={course.id} className="h-11 w-full rounded-xl" /></> : authStatus === "guest" ? <><Button asChild className="h-11 w-full rounded-xl"><Link href={`/${locale}/login?next=${encodeURIComponent(`/${locale}/courses/${courseId}?enroll=1`)}`}><BookOpen aria-hidden="true" />{t("loginToEnroll")}</Link></Button><AddToCartButton courseId={course.id} className="h-11 w-full rounded-xl" /></> : <Button className="h-11 w-full rounded-xl" disabled>{t("studentOnly")}</Button>}
+                  {isDemoMode ? <><p className="text-sm leading-6 text-muted-foreground">{locale === "fa" ? "ثبت‌نام و پرداخت در این دمو غیرفعال است؛ می‌توانی سبد خرید را آزمایش کنی." : "Enrollment and payments are disabled in this demo. You can try the cart."}</p><AddToCartButton courseId={course.id} className="h-11 w-full rounded-xl" /></> : currentEnrollment ? <Button asChild className="h-11 w-full rounded-xl"><Link href={`/${locale}/dashboard/student/purchases`}><CheckCircle2 aria-hidden="true" />{locale === "fa" ? "مشاهده وضعیت خرید" : "View purchase status"}</Link></Button> : authStatus === "student" ? <><Button className="h-11 w-full rounded-xl" onClick={() => setEnrollmentOpen(true)}><CreditCard aria-hidden="true" />{t("requestEnrollment")}</Button><AddToCartButton courseId={course.id} className="h-11 w-full rounded-xl" /></> : authStatus === "guest" ? <><Button asChild className="h-11 w-full rounded-xl"><Link href={`/${locale}/login?next=${encodeURIComponent(`/${locale}/courses/${courseId}?enroll=1`)}`}><BookOpen aria-hidden="true" />{t("loginToEnroll")}</Link></Button><AddToCartButton courseId={course.id} className="h-11 w-full rounded-xl" /></> : <Button className="h-11 w-full rounded-xl" disabled>{t("studentOnly")}</Button>}
                 </CardContent>
               </Card>
             </div>

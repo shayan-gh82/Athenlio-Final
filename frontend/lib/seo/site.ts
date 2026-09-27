@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const siteUrl = new URL(
   process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:5173",
+    (process.env.VERCEL ? "https://athenlio.vercel.app" : "http://localhost:5173"),
 );
 
 export const publicRoutes = ["", "/courses", "/tutors", "/blog"] as const;
